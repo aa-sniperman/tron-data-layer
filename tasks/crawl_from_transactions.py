@@ -1,4 +1,4 @@
-from entities.normal_transaction import NormalTransactionRepo, NormalTransaction
+from entities.normal_transaction import NormalTransactionRepo, NormalTransaction, NormalTransactionType
 from adapter.tron_grid_client import tron_grid_client
 from adapter.utils import TronUtils
 from tasks.base_crawler import BaseTransactionCrawler  # Import the base class
@@ -24,11 +24,13 @@ class FromTransactionCrawler(BaseTransactionCrawler):
     def _parse_raw_tx(self, account: str, raw_tx) -> NormalTransaction:
         try:
             tx_type = raw_tx["raw_data"]["contract"][0]["type"]
+            if tx_type == NormalTransactionType.TRANSFER_ASSET_CONTRACT:
+                return None
             parameter_value = raw_tx["raw_data"]["contract"][0]["parameter"]["value"]
             return NormalTransaction(
                 status=raw_tx["ret"][0]["contractRet"],
                 total_fee=raw_tx["ret"][0]["fee"],
-                value=parameter_value.get("amount", 0),  # Default to 0 if missing
+                value=parameter_value.get("amount") or parameter_value.get("call_value") or 0,  # Default to 0 if missing
                 tx_id=raw_tx["txID"],
                 type=tx_type,
                 block_number=raw_tx["blockNumber"],

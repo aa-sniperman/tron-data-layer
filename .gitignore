@@ -4,3 +4,4 @@ celerybeat-schedule
 data
 **/__pycache__
 logs
+**/*.csv

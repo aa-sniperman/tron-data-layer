@@ -7,6 +7,7 @@ class Trc20Transfer(BaseModel):
     block_timestamp: int  # UInt64 in ClickHouse maps to Python int
     from_address: str  # Avoiding Python keyword conflict
     to_address: str  # Avoiding ambiguity
+    value: str
 
     def to_clickhouse_dict(self):
         """
@@ -18,6 +19,7 @@ class Trc20Transfer(BaseModel):
             "block_timestamp": self.block_timestamp,
             "from": self.from_address,
             "to": self.to_address,
+            "value": self.value
         }
 
     @classmethod
@@ -25,7 +27,7 @@ class Trc20Transfer(BaseModel):
         """
         Converts a ClickHouse query result tuple into a Trc20Transfer instance.
         """
-        columns = ["tx_id", "token_address", "block_timestamp", "from_address", "to_address"]
+        columns = ["tx_id", "token_address", "block_timestamp", "from_address", "to_address", "value"]
         data_dict = dict(zip(columns, row))
         return cls(**data_dict)
 
@@ -39,9 +41,10 @@ class Trc20TransferRepo:
             token_address String,
             block_timestamp UInt64,
             `from` String,
-            `to` String
+            `to` String,
+            value Decimal(76, 0)
         ) ENGINE = MergeTree()
-        ORDER BY (block_timestamp, tx_id);
+        ORDER BY (block_timestamp, from);
         """
         client = await get_async_ch_client()
         await client.command(query)
@@ -59,7 +62,8 @@ class Trc20TransferRepo:
                 str(tx.token_address),
                 int(tx.block_timestamp),
                 str(tx.from_address),
-                str(tx.to_address)
+                str(tx.to_address),
+                str(tx.value)
             ]
             for tx in transfers
         ]
@@ -67,7 +71,7 @@ class Trc20TransferRepo:
         await client.insert(
             "trc20_transfer",
             data,
-            column_names=["tx_id", "token_address", "block_timestamp", "from", "to"]
+            column_names=["tx_id", "token_address", "block_timestamp", "from", "to", "value"]
         )
 
     @staticmethod
@@ -76,7 +80,7 @@ class Trc20TransferRepo:
         Retrieves the latest TRC-20 transfer where either 'from' or 'to' matches the account.
         """
         query = """
-        SELECT tx_id, token_address, block_timestamp, `from`, `to`
+        SELECT tx_id, token_address, block_timestamp, `from`, `to`, value
         FROM trc20_transfer
         WHERE from = %(account)s OR to = %(account)s
         ORDER BY block_timestamp DESC

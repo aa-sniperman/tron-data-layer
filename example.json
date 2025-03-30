@@ -1,109 +1,33 @@
 {
     "ret": [
         {
-            "contractRet": "SUCCESS",
-            "fee": 728670
+            "contractRet": "SUCCESS"
         }
     ],
     "signature": [
-        "f5201a0b2b4e457078b85f5054eb740a86d86359bc4dfab8538424470a203db940340e0ab767801fd1a7a9f689eb7a30d679016f2948057e4284a24d7ff983161c"
+        "06693bd37682105ae2582ba9792e15303f7459a5a584e03279bb321df8f28f0c5e7b2cda5a0078b6e868cb93b4948966b5e1c88a8ce088e15790ff62795bc2d71c"
     ],
-    "txID": "84e4140cdb24dfe640650698f0878dd573474679a06c952ff15cff0563876aae",
-    "net_usage": 0,
-    "raw_data_hex": "0a026a3d22085e62bb80881dbe1c40c8a9a5b9dd325ad602081f12d1020a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e7472616374129b020a1541049c155e8e7a4a925a33c834919439231e0b0297121541e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f33188af6a5a50122e4017ff36ab50000000000000000000000000000000000000000000009d5d7bb868ba0f800000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000b4a2244b6ff0b27d4c52d22fc39e0059e2d75d5a00000000000000000000000000000000000000000000000000000195d7295a8b0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000891cdb91d149f23b1a45d9c5ca78a88d0cb44c18000000000000000000000000ef22c1b62ba50703145069beec75dd0cfa34363970d7e0a1b9dd32900180c2d72f",
-    "net_fee": 513000,
-    "energy_usage": 0,
-    "blockNumber": 70806096,
-    "block_timestamp": 1743071508000,
-    "energy_fee": 215670,
-    "energy_usage_total": 102679,
+    "txID": "02c3faa9073778f42ddb18b84b57f7d62e0ebeb58a95cc91583e1eed36adbbb0",
     "raw_data": {
         "contract": [
             {
                 "parameter": {
                     "value": {
-                        "data": "7ff36ab50000000000000000000000000000000000000000000009d5d7bb868ba0f800000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000b4a2244b6ff0b27d4c52d22fc39e0059e2d75d5a00000000000000000000000000000000000000000000000000000195d7295a8b0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000891cdb91d149f23b1a45d9c5ca78a88d0cb44c18000000000000000000000000ef22c1b62ba50703145069beec75dd0cfa343639",
-                        "owner_address": "41049c155e8e7a4a925a33c834919439231e0b0297",
+                        "data": "7ff36ab5000000000000000000000000000000000000000000000aab1af32351f3b00000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000067bd6018cea102672f8c284583f5dd137dd4625d00000000000000000000000000000000000000000000000000000195d651db500000000000000000000000000000000000000000000000000000000000000002000000000000000000000000891cdb91d149f23b1a45d9c5ca78a88d0cb44c18000000000000000000000000ef22c1b62ba50703145069beec75dd0cfa343639",
+                        "owner_address": "41d5756b020f76c49637c7a81eec2aea2d10652041",
                         "contract_address": "41e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f33",
-                        "call_value": 346651402
+                        "call_value": 336571767
                     },
                     "type_url": "type.googleapis.com/protocol.TriggerSmartContract"
                 },
                 "type": "TriggerSmartContract"
             }
         ],
-        "ref_block_bytes": "6a3d",
-        "ref_block_hash": "5e62bb80881dbe1c",
-        "expiration": 1743071565000,
+        "ref_block_bytes": "57d9",
+        "ref_block_hash": "0aad79b689cb8dd0",
+        "expiration": 1743057441000,
         "fee_limit": 100000000,
-        "timestamp": 1743071506519
+        "timestamp": 1743057383731
     },
-    "internal_transactions": [
-        {
-            "internal_tx_id": "09e374532d5f3736c745c31a1b03c8b25816ea9bedea7015396469df09aac5d5",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False
-            },
-            "to_address": "4159bbb96f76dc2fdfefef4e9d60769ea90372d487",
-            "from_address": "41e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f33"
-        },
-        {
-            "internal_tx_id": "8c9fea2b4d73bc5cced52b1d3a676fdbc7e5f8b6bb01b0e389141531c1a0b554",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False,
-                "call_value": {
-                    "_": 346651402
-                }
-            },
-            "to_address": "41891cdb91d149f23b1a45d9c5ca78a88d0cb44c18",
-            "from_address": "41e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f33"
-        },
-        {
-            "internal_tx_id": "0ba7d3c51a89004997ed4ffd4a50b812a7d6061a4dc9174819bc915522767fb9",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False
-            },
-            "to_address": "41891cdb91d149f23b1a45d9c5ca78a88d0cb44c18",
-            "from_address": "41e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f33"
-        },
-        {
-            "internal_tx_id": "c5707c816303b5466b60ece5e828641d2111cc86285b93aa1768b2407f8e31ec",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False
-            },
-            "to_address": "4159bbb96f76dc2fdfefef4e9d60769ea90372d487",
-            "from_address": "41e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f33"
-        },
-        {
-            "internal_tx_id": "c568068abd2657d8240a3bef3d3c3c20a10cde64620219677b9524f990f91082",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False
-            },
-            "to_address": "41ef22c1b62ba50703145069beec75dd0cfa343639",
-            "from_address": "4159bbb96f76dc2fdfefef4e9d60769ea90372d487"
-        },
-        {
-            "internal_tx_id": "66471493ceb1c7c4409ccf5cd4d9701a59e1aa90a4fb9c33fb61e16048843c17",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False
-            },
-            "to_address": "41891cdb91d149f23b1a45d9c5ca78a88d0cb44c18",
-            "from_address": "4159bbb96f76dc2fdfefef4e9d60769ea90372d487"
-        },
-        {
-            "internal_tx_id": "f59b130c7cc53ce9292ae1fda6015d0c37af024d90968ffefbc3035ecd1488fd",
-            "data": {
-                "note": "63616c6c",
-                "rejected": False
-            },
-            "to_address": "41ef22c1b62ba50703145069beec75dd0cfa343639",
-            "from_address": "4159bbb96f76dc2fdfefef4e9d60769ea90372d487"
-        }
-    ]
+    "raw_data_hex": "0a0257d922080aad79b689cb8dd040e8a1c7b2dd325ad602081f12d1020a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e7472616374129b020a1541d5756b020f76c49637c7a81eec2aea2d10652041121541e95812d8d5b5412d2b9f3a4d5a87ca15c5c51f3318f7dabea00122e4017ff36ab5000000000000000000000000000000000000000000000aab1af32351f3b00000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000067bd6018cea102672f8c284583f5dd137dd4625d00000000000000000000000000000000000000000000000000000195d651db500000000000000000000000000000000000000000000000000000000000000002000000000000000000000000891cdb91d149f23b1a45d9c5ca78a88d0cb44c18000000000000000000000000ef22c1b62ba50703145069beec75dd0cfa34363970b3e2c3b2dd32900180c2d72f"
 }

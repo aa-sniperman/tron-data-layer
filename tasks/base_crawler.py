@@ -54,7 +54,7 @@ class BaseTransactionCrawler(ABC):
         return 0
     
     async def _store_transactions(self, account: str, transactions: list):
-        if not transactions:
+        if not transactions or len(transactions) == 0:
             return
         
         await self._insert_transactions(transactions)

@@ -30,6 +30,7 @@ class Trc20TransactionCrawler(BaseTransactionCrawler):
                 block_timestamp=raw_tx["block_timestamp"],
                 from_address=raw_tx["from"],
                 to_address=raw_tx["to"],
+                value=raw_tx["value"]
             )
         except KeyError as e:
             print(f"KeyError parsing transaction for {account}: Missing key {e}")

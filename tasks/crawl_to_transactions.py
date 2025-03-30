@@ -29,6 +29,8 @@ class ToTransactionCrawler(BaseTransactionCrawler):
         try:
             if raw_tx.get("raw_data"):
                 tx_type = raw_tx["raw_data"]["contract"][0]["type"]
+                if tx_type == NormalTransactionType.TRANSFER_ASSET_CONTRACT:
+                    return None
                 parameter_value = raw_tx["raw_data"]["contract"][0]["parameter"]["value"]
                 return NormalTransaction(
                     status=raw_tx["ret"][0]["contractRet"],
@@ -41,7 +43,7 @@ class ToTransactionCrawler(BaseTransactionCrawler):
                     block_number=raw_tx["blockNumber"],
                     block_timestamp=raw_tx["block_timestamp"],
                     from_address=TronUtils.from_hex_address(
-                        parameter_value.get("to_address") or parameter_value.get("contract_address")
+                        parameter_value.get("owner_address") or parameter_value.get("contract_address")
                     ),
                     to_address=account,
                 )
