@@ -20,7 +20,7 @@ class Trc20TransactionCrawler(BaseTransactionCrawler):
     async def _fetch_transactions(self, account: str, min_ts: int) -> list:
         return await tron_grid_client.get_trc20_txs(account, min_ts)
 
-    def _parse_raw_tx(self, account: str, raw_tx) -> Trc20Transfer:
+    def parse_raw_tx(self, account: str, raw_tx) -> Trc20Transfer:
         if raw_tx.get("type") != "Transfer":
             return None
         try:
@@ -30,7 +30,8 @@ class Trc20TransactionCrawler(BaseTransactionCrawler):
                 block_timestamp=raw_tx["block_timestamp"],
                 from_address=raw_tx["from"],
                 to_address=raw_tx["to"],
-                value=raw_tx["value"]
+                value=raw_tx["value"],
+                key_address=account
             )
         except KeyError as e:
             print(f"KeyError parsing transaction for {account}: Missing key {e}")

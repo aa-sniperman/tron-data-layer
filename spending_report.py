@@ -7,7 +7,8 @@ from json_loader import load_json
 
 PROJECT_ROOT = Path(__file__).resolve().parents[0]
 accounts_path = PROJECT_ROOT / "tracked-accounts.json"
-accounts = load_json(accounts_path)
+# accounts = load_json(accounts_path)
+accounts = list(["TJ2WnwEM2M4ErJQHeMPFMhQLivv1haXhfs"])
 
 PAIR_ADDRESS = "TJ9g2SzMSH7yV71AtpEjLa4HQyRkSGYHW4"
 ROUTER_ADDRESS = "TXF1xDbVGdxFGbovmmmXvBGu8ZiE3Lq4mR"
@@ -16,7 +17,6 @@ SUNPUMP_ADDRESS = "TTfvyrAz86hbZk5iDpKD78pqLGgi8C7AAw"
 excluded_accounts = list([
     ROUTER_ADDRESS,
     PAIR_ADDRESS,
-    SUNPUMP_ADDRESS,
     SUNANA_TOKEN_ADDRESS
 ])
 
@@ -46,7 +46,7 @@ async def main(max_timestamp):
         SELECT SUM(total_fee)
         FROM (
             SELECT tx_id, MAX(total_fee) as total_fee
-            FROM normal_transaction
+            FROM from_transaction
             WHERE `from` IN %(addresses)s AND block_timestamp <= %(max_timestamp)s
             GROUP BY tx_id
         )
@@ -59,7 +59,7 @@ async def main(max_timestamp):
         SELECT SUM(value)
         FROM (
             SELECT tx_id, MAX(value) as value
-            FROM normal_transaction
+            FROM from_transaction
             WHERE `from` IN %(addresses)s 
             AND `to` NOT IN %(excluded)s
             AND block_timestamp <= %(max_timestamp)s
@@ -75,11 +75,12 @@ async def main(max_timestamp):
         SELECT SUM(value)
         FROM (
             SELECT tx_id, MAX(value) as value
-            FROM normal_transaction
+            FROM to_transaction
             WHERE `to` IN %(addresses)s 
             AND `from` NOT IN (%(excluded)s)
             AND block_timestamp <= %(max_timestamp)s
             AND status = 'SUCCESS'
+            AND `type` != 'UnDelegateResourceContract'
             GROUP BY tx_id
         )
         """, {"addresses": accounts, "excluded": excluded_accounts, "max_timestamp": max_timestamp}
@@ -120,7 +121,7 @@ async def main(max_timestamp):
         SELECT SUM(value)
         FROM (
             SELECT tx_id, MAX(value) as value
-            FROM normal_transaction
+            FROM from_transaction
             WHERE `from` IN %(addresses)s AND `to` = %(router_address)s AND block_timestamp <= %(max_timestamp)s
             AND status = 'SUCCESS'
             GROUP BY tx_id
@@ -134,7 +135,7 @@ async def main(max_timestamp):
         SELECT SUM(value)
         FROM (
             SELECT tx_id, MAX(value) as value
-            FROM normal_transaction
+            FROM to_transaction
             WHERE `from` = %(router_address)s AND `to` IN %(addresses)s AND block_timestamp <= %(max_timestamp)s
             AND status = 'SUCCESS'
             GROUP BY tx_id

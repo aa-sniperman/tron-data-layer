@@ -1,7 +1,7 @@
-from entities.normal_transaction import (
-    NormalTransactionRepo,
-    NormalTransaction,
-    NormalTransactionType,
+from entities.types import NormalTransactionType
+from entities.to_transaction import (
+    ToTransaction,
+    ToTransactionRepo
 )
 from adapter.tron_grid_client import tron_grid_client
 from adapter.utils import TronUtils
@@ -10,7 +10,7 @@ from tasks.base_crawler import BaseTransactionCrawler  # Import the base class
 class ToTransactionCrawler(BaseTransactionCrawler):
     @property
     def repo(self):
-        return NormalTransactionRepo
+        return ToTransactionRepo
 
     @property
     def redis_key(self) -> str:
@@ -19,20 +19,20 @@ class ToTransactionCrawler(BaseTransactionCrawler):
     async def get_latest_transaction(self, account: str):
         return await self.repo.get_latest_transaction_by_to(account)
 
-    async def _insert_transactions(self, transactions: list[NormalTransaction]):
+    async def _insert_transactions(self, transactions: list[ToTransaction]):
         await self.repo.insert_transactions(transactions)
 
     async def _fetch_transactions(self, account: str, min_ts: int) -> list:
         return await tron_grid_client.get_to_txs(account, min_ts)
 
-    def _parse_raw_tx(self, account: str, raw_tx) -> NormalTransaction:
+    def parse_raw_tx(self, account: str, raw_tx) -> ToTransaction:
         try:
             if raw_tx.get("raw_data"):
                 tx_type = raw_tx["raw_data"]["contract"][0]["type"]
                 if tx_type == NormalTransactionType.TRANSFER_ASSET_CONTRACT:
                     return None
                 parameter_value = raw_tx["raw_data"]["contract"][0]["parameter"]["value"]
-                return NormalTransaction(
+                return ToTransaction(
                     status=raw_tx["ret"][0]["contractRet"],
                     total_fee=raw_tx["ret"][0]["fee"],
                     value=parameter_value["balance"]
@@ -46,14 +46,16 @@ class ToTransactionCrawler(BaseTransactionCrawler):
                         parameter_value.get("owner_address") or parameter_value.get("contract_address")
                     ),
                     to_address=account,
+                    internal_tx_id=raw_tx.get("internal_tx_id"),
                 )
             else:
                 data = raw_tx["data"]
-                return NormalTransaction(
+                return ToTransaction(
                     status="REJECTED" if data.get("rejected") else "SUCCESS",
                     total_fee=0,
                     value=data["call_value"]["_"],
                     tx_id=raw_tx["tx_id"],
+                    internal_tx_id=raw_tx.get("internal_tx_id"),
                     type=NormalTransactionType.INTERNAL,
                     block_number=0,
                     block_timestamp=raw_tx["block_timestamp"],

@@ -1,50 +1,41 @@
-from enum import Enum
 from pydantic import BaseModel
+from typing import Optional
 from clickhouse import get_async_ch_client
+from entities.types import NormalTransactionType
 
-class NormalTransactionType(str, Enum):
-    TRIGGER_SMART_CONTRACT = "TriggerSmartContract"
-    UNDELEGATE_RESOURCE_CONTRACT = "UnDelegateResourceContract"
-    TRANSFER_CONTRACT = "TransferContract"
-    INTERNAL = "Internal"
-    TRANSFER_ASSET_CONTRACT = "TransferAssetContract"
-
-class NormalTransaction(BaseModel):
+class ToTransaction(BaseModel):
     status: str
     tx_id: str
+    internal_tx_id: Optional[str] = None  # New optional field
     value: int
-    total_fee: int  # UInt64 in ClickHouse maps to Python int
+    total_fee: int
     block_number: int
-    block_timestamp: int  # Uint64 in ClickHouse maps to Python datetime
-    from_address: str  # Avoiding Python keyword conflict
-    to_address: str  # Avoiding ambiguity
-    type: NormalTransactionType  # New field for transaction type
+    block_timestamp: int
+    from_address: str
+    to_address: str
+    type: NormalTransactionType
 
     def to_clickhouse_dict(self):
-        """
-        Converts the object to a dictionary formatted for ClickHouse insertion.
-        """
+        """Converts the object to a dictionary formatted for ClickHouse insertion."""
         return {
             "status": self.status,
             "tx_id": self.tx_id,
+            "internal_tx_id": self.internal_tx_id or "",  # Handle None case
             "value": self.value,
             "total_fee": self.total_fee,
             "block_number": self.block_number,
             "block_timestamp": self.block_timestamp,
             "from": self.from_address,
             "to": self.to_address,
-            "type": self.type.value,  # Convert Enum to string
+            "type": self.type.value,
         }
 
     @classmethod
-    def from_clickhouse_tuple(cls, row: tuple) -> "NormalTransaction":
-        """
-        Converts a ClickHouse query result tuple into a NormalTransaction instance.
-        """
-        columns = ["status", "tx_id", "total_fee", "value", "block_number",
-                   "block_timestamp", "from_address", "to_address", "type"]
+    def from_clickhouse_tuple(cls, row: tuple) -> "ToTransaction":
+        """Converts a ClickHouse query result tuple into a NormalTransaction instance."""
+        columns = ["status", "tx_id", "internal_tx_id", "total_fee", "value", 
+                   "block_number", "block_timestamp", "from_address", "to_address", "type"]
 
-        # Convert tuple to dictionary
         data_dict = dict(zip(columns, row))
 
         # Convert transaction type from string to Enum if necessary
@@ -53,14 +44,15 @@ class NormalTransaction(BaseModel):
 
         return cls(**data_dict)
 
-class NormalTransactionRepo:
+class ToTransactionRepo:
     @staticmethod
     async def create_table():
-        """Creates the normal_transaction table if it doesn't exist."""
+        """Creates the to_transaction table if it doesn't exist."""
         query = """
-        CREATE TABLE IF NOT EXISTS normal_transaction (
+        CREATE TABLE IF NOT EXISTS to_transaction (
             status String,
             tx_id String,
+            internal_tx_id String DEFAULT '',  -- Added new field
             value UInt64,
             total_fee UInt64,
             block_number UInt64,
@@ -75,44 +67,41 @@ class NormalTransactionRepo:
         await client.command(query)
 
     @staticmethod
-    async def insert_transactions(transactions: list[NormalTransaction]):
-        """
-        Inserts transaction records using ClickHouse's `insert` method.
-        """
+    async def insert_transactions(transactions: list[ToTransaction]):
+        """Inserts transaction records using ClickHouse's `insert` method."""
         client = await get_async_ch_client()
 
         data = [
             [
                 str(tx.status),
                 str(tx.tx_id),
+                str(tx.internal_tx_id or ""),  # Handle None case
                 int(tx.total_fee),
                 int(tx.value),
                 int(tx.block_number),
                 int(tx.block_timestamp),
                 str(tx.from_address),
                 str(tx.to_address),
-                str(tx.type.value)  # Convert Enum to string for insertion
+                str(tx.type.value)
             ]
             for tx in transactions
         ]
 
         await client.insert(
-            "normal_transaction",
+            "to_transaction",
             data,
             column_names=[
-                "status", "tx_id", "total_fee", "value", "block_number",
-                "block_timestamp", "from", "to", "type"
+                "status", "tx_id", "internal_tx_id", "total_fee", "value", 
+                "block_number", "block_timestamp", "from", "to", "type"
             ]
         )
 
     @staticmethod
-    async def get_latest_transaction_by_from(from_address: str) -> NormalTransaction | None:
-        """
-        Retrieves the latest normal transaction for a given 'from' address.
-        """
+    async def get_latest_transaction_by_from(from_address: str) -> ToTransaction | None:
+        """Retrieves the latest normal transaction for a given 'from' address."""
         query = """
-        SELECT status, tx_id, total_fee, value, block_number, block_timestamp, from, to, type
-        FROM normal_transaction
+        SELECT status, tx_id, internal_tx_id, total_fee, value, block_number, block_timestamp, `from`, `to`, type
+        FROM to_transaction
         WHERE from = %(from_address)s
         ORDER BY block_timestamp DESC
         LIMIT 1
@@ -121,19 +110,16 @@ class NormalTransactionRepo:
         results = await client.query(query, parameters={"from_address": from_address})
 
         rows = results.result_rows
-
         if rows and len(rows) > 0:
-            return NormalTransaction.from_clickhouse_tuple(rows[0])
+            return ToTransaction.from_clickhouse_tuple(rows[0])
         return None
 
     @staticmethod
-    async def get_latest_transaction_by_to(to_address: str) -> NormalTransaction | None:
-        """
-        Retrieves the latest normal transaction for a given 'to' address.
-        """
+    async def get_latest_transaction_by_to(to_address: str) -> ToTransaction | None:
+        """Retrieves the latest normal transaction for a given 'to' address."""
         query = """
-        SELECT status, tx_id, total_fee, value, block_number, block_timestamp, `from`, `to`, type
-        FROM normal_transaction
+        SELECT status, tx_id, internal_tx_id, total_fee, value, block_number, block_timestamp, `from`, `to`, type
+        FROM to_transaction
         WHERE to = %(to_address)s
         ORDER BY block_timestamp DESC
         LIMIT 1
@@ -143,5 +129,5 @@ class NormalTransactionRepo:
 
         rows = results.result_rows
         if rows and len(rows) > 0:
-            return NormalTransaction.from_clickhouse_tuple(rows[0])
+            return ToTransaction.from_clickhouse_tuple(rows[0])
         return None

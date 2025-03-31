@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 from clickhouse import get_async_ch_client
 
+
 class Trc20Transfer(BaseModel):
     tx_id: str
     token_address: str
     block_timestamp: int  # UInt64 in ClickHouse maps to Python int
+    key_address: str
     from_address: str  # Avoiding Python keyword conflict
     to_address: str  # Avoiding ambiguity
     value: str
@@ -17,9 +19,10 @@ class Trc20Transfer(BaseModel):
             "tx_id": self.tx_id,
             "token_address": self.token_address,
             "block_timestamp": self.block_timestamp,
+            "key": self.key_address,
             "from": self.from_address,
             "to": self.to_address,
-            "value": self.value
+            "value": self.value,
         }
 
     @classmethod
@@ -27,9 +30,20 @@ class Trc20Transfer(BaseModel):
         """
         Converts a ClickHouse query result tuple into a Trc20Transfer instance.
         """
-        columns = ["tx_id", "token_address", "block_timestamp", "from_address", "to_address", "value"]
+        columns = [
+            "tx_id",
+            "token_address",
+            "block_timestamp",
+            "key_address",
+            "from_address",
+            "to_address",
+            "value",
+        ]
         data_dict = dict(zip(columns, row))
+        # Convert Decimal to string
+        data_dict["value"] = str(data_dict["value"])
         return cls(**data_dict)
+
 
 class Trc20TransferRepo:
     @staticmethod
@@ -40,6 +54,7 @@ class Trc20TransferRepo:
             tx_id String,
             token_address String,
             block_timestamp UInt64,
+            `key` String,
             `from` String,
             `to` String,
             value Decimal(76, 0)
@@ -61,9 +76,10 @@ class Trc20TransferRepo:
                 str(tx.tx_id),
                 str(tx.token_address),
                 int(tx.block_timestamp),
+                str(tx.key_address),
                 str(tx.from_address),
                 str(tx.to_address),
-                str(tx.value)
+                str(tx.value),
             ]
             for tx in transfers
         ]
@@ -71,7 +87,15 @@ class Trc20TransferRepo:
         await client.insert(
             "trc20_transfer",
             data,
-            column_names=["tx_id", "token_address", "block_timestamp", "from", "to", "value"]
+            column_names=[
+                "tx_id",
+                "token_address",
+                "block_timestamp",
+                "key",
+                "from",
+                "to",
+                "value",
+            ],
         )
 
     @staticmethod
@@ -80,9 +104,9 @@ class Trc20TransferRepo:
         Retrieves the latest TRC-20 transfer where either 'from' or 'to' matches the account.
         """
         query = """
-        SELECT tx_id, token_address, block_timestamp, `from`, `to`, value
+        SELECT tx_id, token_address, block_timestamp, `key`, `from`, `to`, value
         FROM trc20_transfer
-        WHERE from = %(account)s OR to = %(account)s
+        WHERE `key` = %(account)s
         ORDER BY block_timestamp DESC
         LIMIT 1
         """

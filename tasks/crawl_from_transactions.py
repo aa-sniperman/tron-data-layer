@@ -1,4 +1,5 @@
-from entities.normal_transaction import NormalTransactionRepo, NormalTransaction, NormalTransactionType
+from entities.types import NormalTransactionType
+from entities.from_transaction import FromTransaction, FromTransactionRepo
 from adapter.tron_grid_client import tron_grid_client
 from adapter.utils import TronUtils
 from tasks.base_crawler import BaseTransactionCrawler  # Import the base class
@@ -6,7 +7,7 @@ from tasks.base_crawler import BaseTransactionCrawler  # Import the base class
 class FromTransactionCrawler(BaseTransactionCrawler):
     @property
     def repo(self):
-        return NormalTransactionRepo
+        return FromTransactionRepo
 
     @property
     def redis_key(self) -> str:
@@ -15,19 +16,19 @@ class FromTransactionCrawler(BaseTransactionCrawler):
     async def get_latest_transaction(self, account: str):
         return await self.repo.get_latest_transaction_by_from(account)
 
-    async def _insert_transactions(self, transactions: list[NormalTransaction]):
+    async def _insert_transactions(self, transactions: list[FromTransaction]):
         await self.repo.insert_transactions(transactions)
 
     async def _fetch_transactions(self, account: str, min_ts: int) -> list:
         return await tron_grid_client.get_from_txs(account, min_ts)
 
-    def _parse_raw_tx(self, account: str, raw_tx) -> NormalTransaction:
+    def parse_raw_tx(self, account: str, raw_tx) -> FromTransaction:
         try:
             tx_type = raw_tx["raw_data"]["contract"][0]["type"]
             if tx_type == NormalTransactionType.TRANSFER_ASSET_CONTRACT:
                 return None
             parameter_value = raw_tx["raw_data"]["contract"][0]["parameter"]["value"]
-            return NormalTransaction(
+            return FromTransaction(
                 status=raw_tx["ret"][0]["contractRet"],
                 total_fee=raw_tx["ret"][0]["fee"],
                 value=parameter_value.get("amount") or parameter_value.get("call_value") or 0,  # Default to 0 if missing
