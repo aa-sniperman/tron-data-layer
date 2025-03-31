@@ -1,4 +1,4 @@
-[
+tracked_accounts = [
     "TSgx92MNsi6y5j9aQByJrATAMavSzoFZE9",
     "THc5rZgJMVnsWNP9ZbutBh5CLd4hTppYv6",
     "TAPaghLM4e6vR3TU9yAH5euPAHndSiXDDa",

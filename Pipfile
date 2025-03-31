@@ -16,6 +16,8 @@ celery = {extras = ["beat"], version = "*"}
 redis = {extras = ["hiredis"], version = "*"}
 tronapi = "*"
 base58 = "*"
+matplotlib = "*"
+dash = "*"
 
 [dev-packages]
 

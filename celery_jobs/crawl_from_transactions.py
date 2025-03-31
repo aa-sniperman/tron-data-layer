@@ -1,9 +1,8 @@
 import asyncio
-from pathlib import Path
 from celery_app import celery_app
 from celery.schedules import timedelta
 from tasks.crawl_from_transactions import FromTransactionCrawler
-from json_loader import load_json
+from tracked_accounts import tracked_accounts
 
 async def crawl_all_from_accounts(accounts: list[str]):
     crawler = FromTransactionCrawler()
@@ -12,9 +11,7 @@ async def crawl_all_from_accounts(accounts: list[str]):
 
 @celery_app.task
 def crawl_from_transactions_task():
-    PROJECT_ROOT = Path(__file__).resolve().parents[1]
-    accounts_path = PROJECT_ROOT / "tracked-accounts.json"
-    accounts = load_json(accounts_path)
+    accounts = tracked_accounts
     asyncio.run(crawl_all_from_accounts(accounts))
 
 

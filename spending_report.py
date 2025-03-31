@@ -1,24 +1,12 @@
 import asyncio
 import csv
 import sys
-from pathlib import Path
 from clickhouse import get_async_ch_client
-from json_loader import load_json
+from tracked_accounts import tracked_accounts
+from consts import token_configs, ROUTER_ADDRESS, SUNPUMP_ADDRESS
 
-PROJECT_ROOT = Path(__file__).resolve().parents[0]
-accounts_path = PROJECT_ROOT / "tracked-accounts.json"
-# accounts = load_json(accounts_path)
-accounts = list(["TJ2WnwEM2M4ErJQHeMPFMhQLivv1haXhfs"])
-
-PAIR_ADDRESS = "TJ9g2SzMSH7yV71AtpEjLa4HQyRkSGYHW4"
-ROUTER_ADDRESS = "TXF1xDbVGdxFGbovmmmXvBGu8ZiE3Lq4mR"
-SUNANA_TOKEN_ADDRESS = "TXme8qsGdorboWFTX3E2XBWkmLNq4h7Kbx"
-SUNPUMP_ADDRESS = "TTfvyrAz86hbZk5iDpKD78pqLGgi8C7AAw"
-excluded_accounts = list([
-    ROUTER_ADDRESS,
-    PAIR_ADDRESS,
-    SUNANA_TOKEN_ADDRESS
-])
+accounts = tracked_accounts
+# accounts = list(["TJ2WnwEM2M4ErJQHeMPFMhQLivv1haXhfs"])
 
 async def fetch_metric(query, params=None):
     client = await get_async_ch_client()
@@ -37,7 +25,16 @@ async def fetch_and_print_metric(query, params=None):
     # Sum the values
     return sum(row[1] for row in rows) if rows else 0
 
-async def main(max_timestamp):
+async def main(token: str, max_timestamp: int):
+    token_config = token_configs[token]
+
+    excluded_accounts = list([
+        ROUTER_ADDRESS,
+        token_config.address,
+        token_config.pair,
+        SUNPUMP_ADDRESS
+    ])
+    
     metrics = {}
     
     # 1️⃣ Total Gas Used
@@ -98,7 +95,7 @@ async def main(max_timestamp):
             AND block_timestamp <= %(max_timestamp)s
             GROUP BY tx_id
         )
-        """, {"addresses": accounts, "PAIR_ADDRESS": PAIR_ADDRESS, "token": SUNANA_TOKEN_ADDRESS, "max_timestamp": max_timestamp}
+        """, {"addresses": accounts, "PAIR_ADDRESS": token_config.pair, "token": token_config.address, "max_timestamp": max_timestamp}
     )
     
     # 5️⃣ Total Sunana Bought
@@ -112,7 +109,7 @@ async def main(max_timestamp):
             AND block_timestamp <= %(max_timestamp)s
             GROUP BY tx_id
         )
-        """, {"addresses": accounts, "PAIR_ADDRESS": PAIR_ADDRESS, "token": SUNANA_TOKEN_ADDRESS, "max_timestamp": max_timestamp}
+        """, {"addresses": accounts, "PAIR_ADDRESS": token_config.pair, "token": token_config.address, "max_timestamp": max_timestamp}
     )
     
     # 6️⃣ Total TRX Spent on Buys
@@ -142,6 +139,34 @@ async def main(max_timestamp):
         )
         """, {"addresses": accounts, "router_address": ROUTER_ADDRESS, "max_timestamp": max_timestamp}
     )
+
+    # 8 Total TRX Spent on Curve
+    metrics["Total TRX Spent on Curve"] = await fetch_metric(
+        """
+        SELECT SUM(value)
+        FROM (
+            SELECT tx_id, MAX(value) as value
+            FROM from_transaction
+            WHERE `from` IN %(addresses)s AND `to` = %(curve)s AND block_timestamp <= %(max_timestamp)s
+            AND status = 'SUCCESS'
+            GROUP BY tx_id
+        )
+        """, {"addresses": accounts, "curve": SUNPUMP_ADDRESS, "max_timestamp": max_timestamp}
+    )
+
+    # 9 Total TRX Received on Curve
+    metrics["Total TRX Received on Curve"] = await fetch_metric(
+        """
+        SELECT SUM(value)
+        FROM (
+            SELECT tx_id, MAX(value) as value
+            FROM to_transaction
+            WHERE `to` IN %(addresses)s AND `from` = %(curve)s AND block_timestamp <= %(max_timestamp)s
+            AND status = 'SUCCESS'
+            GROUP BY tx_id
+        )
+        """, {"addresses": accounts, "curve": SUNPUMP_ADDRESS, "max_timestamp": max_timestamp}
+    )
     
     # Export to CSV
     with open(f"makers_report_{max_timestamp}.csv", "w", newline="") as csvfile:
@@ -153,9 +178,11 @@ async def main(max_timestamp):
     print("Maker metrics exported to csv")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python analytics/spending.py <max_timestamp>")
+    if len(sys.argv) != 3:
+        print("Usage: python spending_report.py <token> <max_timestamp>")
         sys.exit(1)
     
-    max_timestamp = int(sys.argv[1])
-    asyncio.run(main(max_timestamp))
+    token = sys.argv[1]
+    max_timestamp = int(sys.argv[2])
+
+    asyncio.run(main(token, max_timestamp))
