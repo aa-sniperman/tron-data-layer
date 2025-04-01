@@ -6,3 +6,7 @@ class NormalTransactionType(str, Enum):
     TRANSFER_CONTRACT = "TransferContract"
     INTERNAL = "Internal"
     TRANSFER_ASSET_CONTRACT = "TransferAssetContract"
+
+class ClusterType(str, Enum):
+    VOL_MAKERS = "Vol Makers"
+    INVENTORY = "Inventory"
